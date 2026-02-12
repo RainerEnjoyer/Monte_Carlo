@@ -1,4 +1,4 @@
-#Data generation MC Poster
+# Data generation MC Poster
 set.seed(123)
 
 n  <- 200      # number of observations
@@ -6,24 +6,21 @@ p_true <- 2    # true predictors
 p_noise <- 3   # irrelevant predictors
 sigma <- 1     # noise SD
 
-#geneating X Matrix
+# geneating X Matrix
 X_true <- matrix(rnorm(n * p_true), n, p_true)
 colnames(X_true) <- paste0("X", 1:p_true)
-#selecting betas
+# selecting betas
 beta <- sample(as.numeric(-2:2), size = p_true)  # true coefficients
-#generating error terms
+# generating error terms
 epsilon <- rnorm(n, mean = 0, sd = sigma)
 
-#calculating Y
+# calculating Y
 y <- X_true %*% beta + epsilon
 
-#generating noise variables
+# generating noise variables
 X_noise <- matrix(rnorm(n * p_noise), n, p_noise)
 colnames(X_noise) <- paste0("XF", 1:p_noise)
 
-#optional correlated X values
-X_corr_noise <- X_true[,1] + rnorm(n, 0, 0.1)
-data_sim$Z_corr <- X_corr_noise
 
 X_full <- cbind(X_true, X_noise)
 
@@ -37,7 +34,7 @@ fit_true <- lm(
 )
 summary(fit_true)
 
-#full model fit
+# full model fit
 fit_full <- lm(y ~ ., data = data_sim)
 summary(fit_full)
 
