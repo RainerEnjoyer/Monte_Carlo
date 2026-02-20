@@ -20,7 +20,7 @@ generate_data <- function(n, p, beta, sigma, Sigma = diag(p)) {
 }
 
 # -------------------------
-# Step 1: Screening (Top-K) via grobem Bootstrap-PE
+# Step 1: Screening (Top-K) via grobem Bootstrap-PE (Pre-Selektion der zu testenden Modelle)
 # -------------------------
 step1_screen <- function(dat, p, B1, K) {
   n <- nrow(dat)
@@ -34,22 +34,22 @@ step1_screen <- function(dat, p, B1, K) {
     
     pe_b <- numeric(B1)
     for (b in 1:B1) {
-      idx <- sample.int(n, size = n, replace = TRUE)
-      idx_oob <- setdiff(1:n, unique(idx))
-      if (length(idx_oob) < 5) { pe_b[b] <- NA_real_; next }
+      idx <- sample.int(n, size = n, replace = TRUE) # Sample der Bootstrap-Daten anhand von ID
+      idx_oob <- setdiff(1:n, unique(idx))           # IDs der restlichen Daten
+      if (length(idx_oob) < 5) { pe_b[b] <- NA_real_; next } # mind 5 Datenpunkte für MSE-Berechnung
       
       dat_b   <- dat[idx, , drop = FALSE]
       dat_oob <- dat[idx_oob, , drop = FALSE]
       
       fit_b <- lm(form, data = dat_b)
-      yhat  <- predict(fit_b, newdata = dat_oob)
-      pe_b[b] <- mean((dat_oob$y - yhat)^2)
+      yhat  <- predict(fit_b, newdata = dat_oob) # gefittetes Model auf restlichen Daten testen
+      pe_b[b] <- mean((dat_oob$y - yhat)^2)  # prediction error davon berechnen
     }
     mean(pe_b, na.rm = TRUE)
   }
   
   PE1 <- sapply(A, boot_pe_one_model)
-  A[order(PE1)[1:K]]
+  A[order(PE1)[1:K]] # Nur K Modelle mit geringstem MSE werden behalten
 }
 
 # -------------------------
@@ -111,16 +111,16 @@ selection_prob_m_PE <- function(A_screen, dat, m, B2) {
 # -------------------------
 # Monte Carlo Einbettung
 # -------------------------
-R <- 10
-n <- 100
-beta <- c(2, 5, 0, 0, 0)
+R <- 10 # Monte Carlo-Iterationen
+n <- 100 # Stichprobengröße
+beta <- c(2, 5, 0, 0, 0) # wahre Koeffizienten
 p <- length(beta)
-Sigma <- diag(p)
-sigma <- 1
+Sigma <- diag(p) # Varianz der Kovariaten
+sigma <- 1 # Varianz der Fehlerterme
 
-B1 <- 50
-K  <- 6
-B2 <- 50
+B1 <- 50 # Anzahl Bootstrap-Iterationen Screening
+K  <- 6  # Anzahl Modelle die aus Screening übernommen werden
+B2 <- 50 # Anzahl Bootstrap-Iterationen m-out-of-n Bootstrap
 
 # Anteil nahe 1, stark verdichtet im Bereich (0.7..1) und besonders nahe 1
 m_frac <- 1 - 10^-seq(0.125, 3, by = 0.10)     # 1 - 10^{-0.5} ... 1 - 10^{-3}
